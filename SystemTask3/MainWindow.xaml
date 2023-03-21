@@ -15,7 +15,7 @@
             </Grid.ColumnDefinitions>
 
             <Button Content="File..." Margin="0 0 10 0" Cursor="Hand" Name="btn_chooseFile" Click="btn_chooseFile_Click"/>
-            <TextBox Grid.Column="1" IsEnabled="False" Padding="7 0" Name="tbox_fileName" IsReadOnly="True" />
+            <TextBox Grid.Column="1" IsEnabled="False" Padding="7 0" Name="tbox_fileName" IsReadOnly="True" Text="C:\Users\Documents\Desktop\salam.txt" />
 
         </Grid>
 
@@ -28,7 +28,20 @@
             </Grid.ColumnDefinitions>
 
             <Label Grid.Column="0" Content="Password"/>
-            <TextBox Grid.Column="1" Name="tbox_password" IsEnabled="{Binding IsVisiblePasswordBox}" BorderThickness="2" Margin="0 0 10 0"/>
+
+            <TextBox Grid.Column="1" Name="tbox_password" BorderThickness="2" Margin="0 0 10 0" Text="b14ca5898a4e4133">
+                <TextBox.Style>
+                    <Style TargetType="TextBox">
+                        <Setter Property="IsEnabled" Value="True" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding ElementName=tbox_fileName, Path=Text.Length}" Value="0">
+                                <Setter Property="IsEnabled" Value="False"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBox.Style>
+            </TextBox>
+            
             <RadioButton Grid.Column="2" Content="Encrypt" x:Name="rdbutton_encrpyt" VerticalAlignment="Center"/>
             <RadioButton Grid.Column="3" Content="Decrypt" x:Name="rdbutton_decrpyt" VerticalAlignment="Center"/>
         </Grid>
@@ -43,7 +56,7 @@
                 <ColumnDefinition/>
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
-            <Button Grid.Column="1" Content="Start" Cursor="Hand" Margin="5" Name="btn_start" Click="btn_start_Click" IsEnabled="False"/>
+            <Button Grid.Column="1" Content="Start" Cursor="Hand" Margin="5" Name="btn_start" Click="btn_start_Click" IsEnabled="True"/>
             <Button Grid.Column="2" Content="Cancel" Cursor="Hand" Margin="5" Name="btn_cancel" Click="btn_cancel_Click" IsEnabled="False"/>
         </Grid>
 

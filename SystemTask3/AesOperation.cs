@@ -1,54 +1,42 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Security.Cryptography;
-using System.Text;
 
 namespace SystemTask3;
 
 public class AesOperation
 {
-    public static byte[] EncryptStringToBytes(string key, string plainText)
+    public static byte[] EncryptStringToBytes(string original, byte[] key, byte[] IV)
     {
-        byte[] iv = new byte[16];
+        using var encryption = Aes.Create();
 
-        using Aes aes = Aes.Create();
+        encryption.Key = key;
+        encryption.IV = IV;
 
-        aes.Key = Encoding.UTF8.GetBytes(key);
-        aes.IV = iv;
+        ICryptoTransform encryptor = encryption.CreateEncryptor(encryption.Key, encryption.IV);
 
-        ICryptoTransform encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
+        using var msEncrypt = new MemoryStream();
+        using var csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write);
 
-        using MemoryStream memoryStream = new MemoryStream();
+        using (var swEncrypt = new StreamWriter(csEncrypt))
+            swEncrypt.Write(original);
 
-        using CryptoStream cryptoStream = new CryptoStream(memoryStream, encryptor, CryptoStreamMode.Write);
-
-        using (StreamWriter streamWriter = new StreamWriter(cryptoStream))
-        {
-            streamWriter.Write(plainText);
-        }
-
-        return memoryStream.ToArray();
+        return msEncrypt.ToArray();
     }
 
-    public static string DecryptString(string key, string cipherText)
+    public static string DecryptStringFromBytes(byte[] encrypted, byte[] key, byte[] IV)
     {
-        byte[] iv = new byte[16];
-        byte[] buffer = Convert.FromBase64String(cipherText);
+        using var encryption = Aes.Create();
 
-        using Aes aes = Aes.Create();
+        encryption.Key = key;
+        encryption.IV = IV;
 
-        aes.Key = Encoding.UTF8.GetBytes(key);
-        aes.IV = iv;
+        ICryptoTransform decryptor = encryption.CreateDecryptor(encryption.Key, encryption.IV);
 
-        ICryptoTransform decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
-
-        using MemoryStream memoryStream = new MemoryStream(buffer);
-
-        using CryptoStream cryptoStream = new CryptoStream(memoryStream, decryptor, CryptoStreamMode.Read);
-
-        using (StreamReader streamReader = new StreamReader(cryptoStream))
+        using MemoryStream msDecrypt = new MemoryStream(encrypted);
+        using CryptoStream csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read);
+        using (StreamReader srDecrypt = new StreamReader(csDecrypt))
         {
-            return streamReader.ReadToEnd();
+            return srDecrypt.ReadToEnd();
         }
     }
 }

@@ -1,11 +1,11 @@
 ﻿using Microsoft.Win32;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
+using System.Text;
 using System.Threading;
 using System.Windows;
-using System.Windows.Media.Animation;
 
 namespace SystemTask3;
 
@@ -13,16 +13,6 @@ public partial class MainWindow : Window
 {
     private readonly OpenFileDialog _openFileDialog;
     private readonly CancellationTokenSource _cts;
-
-    //private bool _isVisiblePasswordBox;
-    //public bool IsVisiblePasswordBox
-    //{
-    //    get { return tbox_fileName.Text.Length > 0; }
-    //    set { _isVisiblePasswordBox = value; }
-    //}
-
-    public bool IsVisiblePasswordBox => tbox_fileName.Text.Length > 0;
-
 
     public MainWindow()
     {
@@ -66,30 +56,79 @@ public partial class MainWindow : Window
             return;
         }
 
-        if (rdbutton_encrpyt.IsChecked == false || rdbutton_decrpyt.IsChecked == false)
+        if (rdbutton_encrpyt.IsChecked == false && rdbutton_decrpyt.IsChecked == false)
         {
             MessageBox.Show("Choose action");
             return;
         }
 
-        EncryptAndWrite(_cts.Token);
+        if (rdbutton_encrpyt.IsChecked is true)
+        {
+            EncryptAndWrite(_cts.Token);
+        }
 
+        if (rdbutton_decrpyt.IsChecked is true)
+        {
+            DecryptAndWrite(_cts.Token);
+        }
     }
 
     private void EncryptAndWrite(CancellationToken token)
     {
-        var plainText = File.ReadAllText(tbox_fileName.Text);
+        var filePath = tbox_fileName.Text;
+        var plainText = File.ReadAllText(filePath);
+        var key = Encoding.UTF8.GetBytes(tbox_password.Text);
 
-        var encryptedBytes = AesOperation.EncryptStringToBytes(tbox_password.Text, plainText);
+        var encryptedBytes = AesOperation.EncryptStringToBytes(plainText, key, key);
 
         var dividedBytesArray = encryptedBytes.Chunk(10);
+
+        progressBar.Maximum = dividedBytesArray.Count();
+
+
+        ThreadPool.QueueUserWorkItem(_ =>
+        {
+            using FileStream fs = new FileStream(filePath, FileMode.Truncate);
+
+            foreach (var bytesArray in dividedBytesArray)
+            {
+                fs.Write(bytesArray);
+
+                Thread.Sleep(20);
+
+                Debug.WriteLine(Thread.CurrentThread.ThreadState.ToString());
+                Debug.WriteLine(Thread.CurrentThread.IsAlive.ToString());
+
+                Dispatcher.Invoke(() =>
+                {
+                    progressBar.Value ++;
+                });
+            }
+
+            MessageBox.Show("Completed successfully");
+        });
+
+    }
+
+    private void DecryptAndWrite(CancellationToken token)
+    {
+        var encryptedBytes = File.ReadAllBytes(tbox_fileName.Text);
+        var key = Encoding.UTF8.GetBytes(tbox_password.Text);
+
+        var plainText = AesOperation.DecryptStringFromBytes(encryptedBytes, key, key);
+
+        var dividedBytesArray = Encoding.UTF8.GetBytes(plainText).Chunk(10);
+
         using FileStream fs = new FileStream(tbox_fileName.Text, FileMode.Truncate);
 
         foreach (var bytesArray in dividedBytesArray)
         {
-            fs.Write(bytesArray, 0, bytesArray.Length);
+            fs.Write(bytesArray);
             //Thread.Sleep(100);
         }
+
+        MessageBox.Show("Completed successfully");
+
     }
 
     private void btn_cancel_Click(object sender, RoutedEventArgs e)
