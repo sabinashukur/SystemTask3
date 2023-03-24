@@ -184,14 +184,17 @@ public partial class MainWindow : Window
     private void btn_cancel_Click(object sender, RoutedEventArgs e)
     {
         _cts.Cancel();
-        //_cts = new();
-        _cts.TryReset();
+        _cts = new();
         Reset();
     }
 
     private void Window_Closing(object sender, CancelEventArgs e)
     {
-        var result = MessageBox.Show("Are you sure you want to close the window", "Close?", MessageBoxButton.YesNoCancel, MessageBoxImage.Question, MessageBoxResult.Cancel);
+        var result = MessageBox.Show("Are you sure you want to close the window", 
+                                     "Close?", 
+                                     MessageBoxButton.YesNoCancel,
+                                     MessageBoxImage.Question,
+                                     MessageBoxResult.Cancel);
 
         if (result != MessageBoxResult.Yes)
         {
