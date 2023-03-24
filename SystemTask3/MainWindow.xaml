@@ -15,7 +15,7 @@
             </Grid.ColumnDefinitions>
 
             <Button Content="File..." Margin="0 0 10 0" Cursor="Hand" Name="btn_chooseFile" Click="btn_chooseFile_Click"/>
-            <TextBox Grid.Column="1" IsEnabled="False" Padding="7 0" Name="tbox_fileName" IsReadOnly="True" Text="C:\Users\Documents\Desktop\salam.txt" />
+            <TextBox Grid.Column="1" IsEnabled="False" Padding="7 0" Name="tbox_fileName" IsReadOnly="True"/>
 
         </Grid>
 
@@ -29,7 +29,7 @@
 
             <Label Grid.Column="0" Content="Password"/>
 
-            <TextBox Grid.Column="1" Name="tbox_password" BorderThickness="2" Margin="0 0 10 0" Text="b14ca5898a4e4133">
+            <TextBox Grid.Column="1" Name="tbox_password" BorderThickness="2" Margin="0 0 10 0">
                 <TextBox.Style>
                     <Style TargetType="TextBox">
                         <Setter Property="IsEnabled" Value="True" />
@@ -47,7 +47,7 @@
         </Grid>
 
         <Grid Margin="10 5">
-            <ProgressBar Height="30" Name="progressBar" />
+            <ProgressBar Height="30" Name="progressBar"/>
         </Grid>
 
         <Grid Margin="10 5">
@@ -56,8 +56,11 @@
                 <ColumnDefinition/>
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
-            <Button Grid.Column="1" Content="Start" Cursor="Hand" Margin="5" Name="btn_start" Click="btn_start_Click"    IsEnabled="False"/>
+
+            <Button Grid.Column="1" Content="Start" Cursor="Hand" Margin="5" Name="btn_start" Click="btn_start_Click"/>
+
             <Button Grid.Column="2" Content="Cancel" Cursor="Hand" Margin="5" Name="btn_cancel" Click="btn_cancel_Click" IsEnabled="False"/>
+
         </Grid>
 
     </StackPanel>

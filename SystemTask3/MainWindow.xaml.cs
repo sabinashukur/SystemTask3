@@ -1,7 +1,6 @@
 ﻿using Microsoft.Win32;
 using System;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -14,7 +13,7 @@ namespace SystemTask3;
 public partial class MainWindow : Window
 {
     private readonly OpenFileDialog _openFileDialog;
-    private readonly CancellationTokenSource _cts;
+    private CancellationTokenSource _cts;
 
     public MainWindow()
     {
@@ -35,7 +34,7 @@ public partial class MainWindow : Window
         if (_openFileDialog.ShowDialog() is true)
         {
             tbox_fileName.Text = _openFileDialog.FileName;
-            btn_start.IsEnabled = true;
+            Reset();
         }
     }
 
@@ -64,6 +63,9 @@ public partial class MainWindow : Window
             MessageBox.Show("Choose action");
             return;
         }
+
+        btn_start.IsEnabled = false;
+        btn_cancel.IsEnabled = true;
 
         if (rdbutton_encrpyt.IsChecked is true)
         {
@@ -98,6 +100,8 @@ public partial class MainWindow : Window
                 if (token.IsCancellationRequested)
                 {
                     MessageBox.Show("Cancelled");
+                    fs.Close();
+                    File.WriteAllText(filePath, plainText);
                     return;
                 }
 
@@ -107,9 +111,19 @@ public partial class MainWindow : Window
 
                 Dispatcher.Invoke(() =>
                 {
-                    progressBar.Value++;
-                }, DispatcherPriority.Normal, token);
+                    if (!token.IsCancellationRequested)
+                        progressBar.Value++;
+                });
+
             }
+
+            Dispatcher.Invoke(() =>
+            {
+                if (!token.IsCancellationRequested)
+                {
+                    Reset();
+                }
+            });
 
             MessageBox.Show("Completed successfully");
         });
@@ -118,28 +132,61 @@ public partial class MainWindow : Window
 
     private void DecryptAndWrite(CancellationToken token)
     {
-        var encryptedBytes = File.ReadAllBytes(tbox_fileName.Text);
+        var filePath = tbox_fileName.Text;
+        var encryptedBytes = File.ReadAllBytes(filePath);
         var key = Encoding.UTF8.GetBytes(tbox_password.Text);
 
         var plainText = AesOperation.DecryptStringFromBytes(encryptedBytes, key, key);
 
         var dividedBytesArray = Encoding.UTF8.GetBytes(plainText).Chunk(10);
 
-        using FileStream fs = new FileStream(tbox_fileName.Text, FileMode.Truncate);
+        progressBar.Maximum = dividedBytesArray.Count();
 
-        foreach (var bytesArray in dividedBytesArray)
+        ThreadPool.QueueUserWorkItem(_ =>
         {
-            fs.Write(bytesArray);
-            //Thread.Sleep(100);
-        }
+            using FileStream fs = new FileStream(filePath, FileMode.Truncate);
 
-        MessageBox.Show("Completed successfully");
+            foreach (var bytesArray in dividedBytesArray)
+            {
+                if (token.IsCancellationRequested)
+                {
+                    MessageBox.Show("Cancelled");
+                    fs.Close();
+                    File.WriteAllText(filePath, plainText);
+                    return;
+                }
+
+                fs.Write(bytesArray);
+
+                Thread.Sleep(20);
+
+                Dispatcher.Invoke(() =>
+                {
+                    if (!token.IsCancellationRequested)
+                        progressBar.Value++;
+                });
+
+            }
+
+            Dispatcher.Invoke(() =>
+            {
+                if (!token.IsCancellationRequested)
+                {
+                    Reset();
+                }
+            });
+
+            MessageBox.Show("Completed successfully");
+        });
 
     }
 
     private void btn_cancel_Click(object sender, RoutedEventArgs e)
     {
         _cts.Cancel();
+        //_cts = new();
+        _cts.TryReset();
+        Reset();
     }
 
     private void Window_Closing(object sender, CancelEventArgs e)
@@ -148,8 +195,15 @@ public partial class MainWindow : Window
 
         if (result != MessageBoxResult.Yes)
         {
-            e.Cancel = true;
             _cts.Cancel();
+            e.Cancel = true;
         }
+    }
+
+    private void Reset()
+    {
+        btn_start.IsEnabled = true;
+        btn_cancel.IsEnabled = false;
+        progressBar.Value = 0;
     }
 }
