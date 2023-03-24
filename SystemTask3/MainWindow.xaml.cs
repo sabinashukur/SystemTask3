@@ -1,11 +1,13 @@
 ﻿using Microsoft.Win32;
 using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Windows;
+using System.Windows.Threading;
 
 namespace SystemTask3;
 
@@ -30,9 +32,10 @@ public partial class MainWindow : Window
 
     private void btn_chooseFile_Click(object sender, RoutedEventArgs e)
     {
-        if (_openFileDialog.ShowDialog() == true)
+        if (_openFileDialog.ShowDialog() is true)
         {
             tbox_fileName.Text = _openFileDialog.FileName;
+            btn_start.IsEnabled = true;
         }
     }
 
@@ -92,17 +95,20 @@ public partial class MainWindow : Window
 
             foreach (var bytesArray in dividedBytesArray)
             {
+                if (token.IsCancellationRequested)
+                {
+                    MessageBox.Show("Cancelled");
+                    return;
+                }
+
                 fs.Write(bytesArray);
 
                 Thread.Sleep(20);
 
-                Debug.WriteLine(Thread.CurrentThread.ThreadState.ToString());
-                Debug.WriteLine(Thread.CurrentThread.IsAlive.ToString());
-
                 Dispatcher.Invoke(() =>
                 {
-                    progressBar.Value ++;
-                });
+                    progressBar.Value++;
+                }, DispatcherPriority.Normal, token);
             }
 
             MessageBox.Show("Completed successfully");
@@ -133,6 +139,17 @@ public partial class MainWindow : Window
 
     private void btn_cancel_Click(object sender, RoutedEventArgs e)
     {
+        _cts.Cancel();
+    }
 
+    private void Window_Closing(object sender, CancelEventArgs e)
+    {
+        var result = MessageBox.Show("Are you sure you want to close the window", "Close?", MessageBoxButton.YesNoCancel, MessageBoxImage.Question, MessageBoxResult.Cancel);
+
+        if (result != MessageBoxResult.Yes)
+        {
+            e.Cancel = true;
+            _cts.Cancel();
+        }
     }
 }

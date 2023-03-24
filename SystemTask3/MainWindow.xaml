@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="MainWindow" Height="205" Width="700" FontSize="18" Loaded="Window_Loaded" WindowStartupLocation="CenterScreen" MinWidth="560" MaxHeight="210" MinHeight="205" >
+        Title="MainWindow" Height="205" Width="700" FontSize="18" Loaded="Window_Loaded" WindowStartupLocation="CenterScreen" MinWidth="560" MaxHeight="210" MinHeight="205" Closing="Window_Closing" >
 
     <StackPanel>
 
@@ -56,7 +56,7 @@
                 <ColumnDefinition/>
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
-            <Button Grid.Column="1" Content="Start" Cursor="Hand" Margin="5" Name="btn_start" Click="btn_start_Click" IsEnabled="True"/>
+            <Button Grid.Column="1" Content="Start" Cursor="Hand" Margin="5" Name="btn_start" Click="btn_start_Click"    IsEnabled="False"/>
             <Button Grid.Column="2" Content="Cancel" Cursor="Hand" Margin="5" Name="btn_cancel" Click="btn_cancel_Click" IsEnabled="False"/>
         </Grid>
 
